@@ -1,0 +1,257 @@
+openapi: 3.0.0
+info:
+  title: Banking System API
+  version: 1.0.0
+  description: API para manejar la información de los clientes y productos de un banco.
+servers:
+  - url: https://api.bank.com/v1
+    description: Bank API
+
+paths:
+  /customers:
+    post:
+      summary: Crear un nuevo cliente.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Customer'
+      responses:
+        '201':
+          description: CCliente creado con éxito.
+    get:
+      summary: Obtener lista de todos los clientes.
+      responses:
+        '200':
+          description: Lista de clientes.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Customer'
+  
+  /customers/{customerId}:
+    get:
+      summary: Obtener la información de un cliente específico.
+      parameters:
+        - in: path
+          name: customerId
+          required: true
+          schema:
+            type: string
+          description: Customer ID.
+      responses:
+        '200':
+          description: Detalles del cliente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+    
+    delete:
+      summary: Eliminar un cliente.
+      parameters:
+        - in: path
+          name: customerId
+          required: true
+          schema:
+            type: string
+          description: ID del cliente.
+      responses:
+        '204':
+          description: Cliente eliminado.
+
+  /customers/{customerId}/accounts:
+    post:
+      summary: Crear una nueva cuenta bancaria para un cliente.
+      parameters:
+        - in: path
+          name: customerId
+          required: true
+          schema:
+            type: string
+          description: ID del cliente.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BankAccount'
+      responses:
+        '201':
+          description: BCuenta bancaria creada con éxito.
+    get:
+      summary: Listar cuentas bancarias de un cliente.
+      parameters:
+        - in: path
+          name: customerId
+          required: true
+          schema:
+            type: string
+          description: Customer ID.
+      responses:
+        '200':
+          description: Lista de cuentas del cliente.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BankAccount'
+
+  /customers/{customerId}/credits:
+    post:
+      summary: Crear un nuevo producto de crédito para un cliente.
+      parameters:
+        - in: path
+          name: customerId
+          required: true
+          schema:
+            type: string
+          description: ID del cliente.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Credit'
+      responses:
+        '201':
+          description: Crédito creado con éxito.
+    get:
+      summary: Listar productos de crédito de un cliente.
+      parameters:
+        - in: path
+          name: customerId
+          required: true
+          schema:
+            type: string
+          description: ID del cliente.
+      responses:
+        '200':
+          description: Lista de créditos del cliente.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Credit'
+
+  /customers/{customerId}/transactions:
+    get:
+      summary: Consultar todos los movimientos de un producto bancario del cliente.
+      parameters:
+        - in: path
+          name: customerId
+          required: true
+          schema:
+            type: string
+          description: ID del cliente.
+        - in: query
+          name: accountId
+          schema:
+            type: string
+          description: ID de la cuenta bancaria para filtrar movimientos.
+        - in: query
+          name: loanId
+          schema:
+            type: string
+          description: ID del crédito para filtrar movimientos.
+      responses:
+        '200':
+          description: Lista de movimientos.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+
+components:
+  schemas:
+    Customer:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [personal, empresarial]
+        name:
+          type: string
+        bankProducts:
+          type: array
+          items:
+            $ref: '#/components/schemas/BankProduct'
+        creditProducts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Credit'
+
+    BankAccount:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [ahorro, corriente, plazoFijo]
+        balance:
+          type: number
+        holder:
+          type: string
+        authorizedSigners:
+          type: array
+          items:
+            type: string
+        transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+
+    Credit:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [personal, empresarial, tarjetaCredito]
+        amount:
+          type: number
+        outstandingBalance:
+          type: number
+        creditLimit:
+          type: number
+        status:
+          type: string
+          enum: [activo, pagado, atrasado]
+
+    BankProduct:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [cuenta, credito]
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum:  [deposito, retiro, pago]
+        amount:
+          type: number
+        date:
+          type: string
+          format: date-time
+        accountId:
+          type: string
+        loanId:
+          type: string
